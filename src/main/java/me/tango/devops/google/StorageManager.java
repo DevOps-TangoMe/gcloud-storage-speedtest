@@ -1,9 +1,12 @@
 package me.tango.devops.google;
 
 
+import static me.tango.devops.google.CredentialsManager.*;
+
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.Bucket;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,40 +14,53 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
-import static me.tango.devops.google.CredentialsManager.*;
 
-public class StorageManager {
-    // US-WEST2 is not valid
-    public final static String[] REGIONS =
+/** Manage Google Cloud Storage client. */
+public final class StorageManager {
+    /** Available regions, US-WEST2 is not valid. */
+    public static final String[] REGIONS =
         new String[] {"ASIA-EAST1", "US-CENTRAL1", "US-CENTRAL2", "US-EAST1", "US-EAST2",
             "US-EAST3", "US-WEST1"};
-    public static final Map<String, String> buckets = new HashMap<String, String>();
-    private final static String BUCKET_PREFIX = "upload-speed-test-a34c4e0c-";
+    /** Region->Bucket mappings. */
+    public static final Map<String, String> BUCKETS = new HashMap<String, String>();
+    /** Buckets' prefix. **/
+    private static final String BUCKET_PREFIX = "upload-speed-test-a34c4e0c-";
+    /** log. */
     private static final Logger LOGGER = LoggerFactory.getLogger(StorageManager.class);
-    private static String PROJECT_ID;
-    private static Storage CLIENT;
+    /** Project ID. */
+    private static String projectId;
+    /** Java client to communicate with Google cloud storage. */
+    private static Storage client;
 
-    public static void setup(String projectId) throws Exception {
-        PROJECT_ID = projectId;
-        CLIENT = new Storage.Builder(httpTransport, JSON_FACTORY, authorize())
-            .setApplicationName(PROJECT_ID).build();
+    // Make it a utility class
+    private StorageManager() {}
+
+    /** Configuration. */
+    public static void setup(final String projectId) throws IOException {
+        StorageManager.projectId = projectId;
+        client = new Storage.Builder(httpTransport, JSON_FACTORY, authorize())
+            .setApplicationName(StorageManager.projectId).build();
     }
 
+    /** return region->bucket mappings. */
     public static Map<String, String> getBuckets() {
-        return buckets;
+        return BUCKETS;
     }
 
-    public static void initBuckets(boolean create) {
+    /** Get all bucket names and create them. */
+    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+    public static void initBuckets(final boolean create) {
         for (final String region : REGIONS) {
-            final String bucketName = BUCKET_PREFIX + region.toLowerCase();
-            buckets.put(region, bucketName);
+            final String bucketName = BUCKET_PREFIX + region.toLowerCase(Locale.ENGLISH);
+            BUCKETS.put(region, bucketName);
 
             if (create) {
                 try {
                     LOGGER.debug("Creating bucket  '{}'", bucketName);
-                    Bucket newBucket = CLIENT.buckets().insert(PROJECT_ID,
+                    client.buckets().insert(projectId,
                         new Bucket().setName(bucketName).setLocation(region)
                             .setStorageClass("DURABLE_REDUCED_AVAILABILITY")).execute();
                 } catch (IOException e) {
@@ -54,25 +70,27 @@ public class StorageManager {
         }
     }
 
+    /** Delete BUCKETS. */
     public static void deleteBuckets() {
-        for (final String bucketName : buckets.values()) {
+        for (final String bucketName : BUCKETS.values()) {
             try {
                 LOGGER.debug("Deleting bucket " + bucketName);
-                CLIENT.buckets().delete(bucketName).execute();
+                client.buckets().delete(bucketName).execute();
             } catch (IOException e) {
                 LOGGER.error("Delete bucket exception", e);
             }
         }
     }
 
-    public static boolean putBytes(String bucket, String key, byte[] bytes) {
+    /** Upload data. */
+    public static boolean putBytes(final String bucket, final String key, final byte[] bytes) {
         final InputStreamContent mediaContent =
             new InputStreamContent("application/octet-stream", new ByteArrayInputStream(bytes));
         mediaContent.setLength(bytes.length);
 
         try {
             final Storage.Objects.Insert insertObject =
-                CLIENT.objects().insert(bucket, null, mediaContent);
+                client.objects().insert(bucket, null, mediaContent);
             insertObject.setName(key);
             if (mediaContent.getLength() > 0
                 && mediaContent.getLength() <= 2 * 1000 * 1000 /* 2MB */) {
@@ -86,9 +104,10 @@ public class StorageManager {
         }
     }
 
-    public static byte[] getBytes(String bucket, String key) {
+    /** Download data. */
+    public static byte[] getBytes(final String bucket, final String key) {
         try {
-            Storage.Objects.Get getRequest = CLIENT.objects().get(bucket, key);
+            final Storage.Objects.Get getRequest = client.objects().get(bucket, key);
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             getRequest.executeMediaAndDownloadTo(baos);
             return baos.toByteArray();
@@ -98,9 +117,10 @@ public class StorageManager {
         }
     }
 
-    public static void deleteBytes(String bucket, String key) {
+    /** Delete data. */
+    public static void deleteBytes(final String bucket, final String key) {
         try {
-            CLIENT.objects().delete(bucket, key).execute();
+            client.objects().delete(bucket, key).execute();
         } catch (IOException e) {
             LOGGER.error("Error deleting data", e);
         }

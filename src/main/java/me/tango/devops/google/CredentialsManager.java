@@ -17,14 +17,14 @@ import com.google.common.io.Files;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.HashSet;
 import java.util.Set;
 
-
-public class CredentialsManager {
+/** Manage google credentials. */
+public final class CredentialsManager {
     /**
      * Global instance of the JSON factory.
      */
@@ -37,8 +37,8 @@ public class CredentialsManager {
     /**
      * Directory to store user credentials.
      */
-    private static final java.io.File DATA_STORE_DIR =
-        new java.io.File(System.getProperty("user.home"), ".google_cloud/");
+    private static final File DATA_STORE_DIR = new File(System.getProperty("user.home"),
+        ".google_cloud/");
     /**
      * Global instance of the HTTP transport.
      */
@@ -49,9 +49,14 @@ public class CredentialsManager {
      */
     private static FileDataStoreFactory dataStoreFactory;
 
+    /** client secret file from google. */
     private static String clientSecretFile;
 
-    public static void setup(String file) throws IOException, GeneralSecurityException {
+    // Make it a utility class
+    private CredentialsManager() {}
+
+    /** Configure. */
+    public static void setup(final String file) throws IOException, GeneralSecurityException {
         clientSecretFile = file;
 
         // Initialize the transport.
@@ -64,24 +69,16 @@ public class CredentialsManager {
     /**
      * Authorizes the installed application to access user's protected data.
      */
-    public static Credential authorize() throws Exception {
+    public static Credential authorize() throws IOException {
         // Load client secrets.
-        GoogleClientSecrets clientSecrets = null;
-        try {
-            final byte[] bytes = Files.toByteArray(new File(clientSecretFile));
-            clientSecrets = GoogleClientSecrets
-                .load(JSON_FACTORY, new InputStreamReader(new ByteArrayInputStream(bytes)));
-            if (clientSecrets.getDetails().getClientId() == null
-                || clientSecrets.getDetails().getClientSecret() == null) {
-                throw new Exception("client_secrets not well formed.");
-            }
-        } catch (Exception e) {
-            System.out
-                .println("Problem loading client_secrets.json file. Make sure it exists, you are " +
-                    "loading it with the right path, and a client ID and client secret are " +
-                    "defined in it.\n" + e.getMessage());
-            System.exit(1);
+        final byte[] bytes = Files.toByteArray(new File(clientSecretFile));
+        final GoogleClientSecrets clientSecrets = GoogleClientSecrets
+            .load(JSON_FACTORY, new InputStreamReader(new ByteArrayInputStream(bytes)));
+        if (clientSecrets.getDetails().getClientId() == null
+            || clientSecrets.getDetails().getClientSecret() == null) {
+            throw new IllegalStateException("client_secrets not well formed.");
         }
+
 
         // Set up authorization code flow.
         // Ask for only the permissions you need. Asking for more permissions will
@@ -90,16 +87,16 @@ public class CredentialsManager {
         // have to spend explaining to users what you are doing with their data.
         // Here we are listing all of the available scopes. You should remove scopes
         // that you are not actually using.
-        Set<String> scopes = new HashSet<String>();
+        final Set<String> scopes = new HashSet<String>();
         scopes.add(StorageScopes.DEVSTORAGE_FULL_CONTROL);
         scopes.add(StorageScopes.DEVSTORAGE_READ_ONLY);
         scopes.add(StorageScopes.DEVSTORAGE_READ_WRITE);
 
-        GoogleAuthorizationCodeFlow flow =
+        final GoogleAuthorizationCodeFlow flow =
             new GoogleAuthorizationCodeFlow.Builder(httpTransport, JSON_FACTORY, clientSecrets,
                 scopes).setDataStoreFactory(dataStoreFactory).build();
         // Authorize.
-        VerificationCodeReceiver receiver =
+        final VerificationCodeReceiver receiver =
             AUTH_LOCAL_WEBSERVER ? new LocalServerReceiver() : new GooglePromptReceiver();
         return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
     }

@@ -1,6 +1,8 @@
 package me.tango.devops.task;
 
-public abstract class UploadTask implements Runnable {
+/** Base class of all upload tasks. */
+@SuppressWarnings({"PMD.CommentRequired","PMD.BeanMembersShouldSerialize"})
+public abstract class AbstractUploadTask implements Runnable {
     protected final String region;
     protected final String bucket;
     protected final byte[] data;
@@ -8,7 +10,15 @@ public abstract class UploadTask implements Runnable {
     protected UploadTaskResult result;
 
 
-    public UploadTask(String region, String bucket, byte[] data) {
+    /**
+     * Constructor.
+     *
+     * @param region Region
+     * @param bucket Bucket
+     * @param data  Data
+     */
+    @SuppressWarnings("PMD.ArrayIsStoredDirectly")
+    public AbstractUploadTask(final String region, final String bucket, final byte[] data) {
         this.region = region;
         this.bucket = bucket;
         this.data = data;
@@ -27,7 +37,9 @@ public abstract class UploadTask implements Runnable {
         private final long uploadTime;
         private final long downloadTime;
 
-        public UploadTaskResult(boolean success, long uploadTime, long downloadTime) {
+        /** Result of upload task. */
+        public UploadTaskResult(final boolean success, final long uploadTime,
+            final long downloadTime) {
             this.success = success;
             this.uploadTime = uploadTime;
             this.downloadTime = downloadTime;

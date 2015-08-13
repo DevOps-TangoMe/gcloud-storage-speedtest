@@ -1,19 +1,32 @@
 package me.tango.devops.data;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Random;
 
 
-public class DataBytes {
-    private final static String URL = "ipv4.download.thinkbroadband.com";
-    private final static String USER_AGENT =
-        "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
+/** Download data. */
+//CHECKSTYLE.OFF: IllegalCatch
+public final class DataBytes {
+    /** URL of files to download from. */
+    private static final String URL = "ipv4.download.thinkbroadband.com";
+    /** User agent. */
+    private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 "
+        + "(KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
 
-    public static byte[] getData(Size size) throws IOException {
+    // Make it a utility class
+    private DataBytes() {}
+
+    /**
+     * Download data.
+     * @param size the size to download
+     * @return an byte array
+     * @throws IOException Network IO issue
+     */
+    public static byte[] getData(final Size size) throws IOException {
         switch (size) {
             case SMALL:
                 return get1KBData();
@@ -23,14 +36,14 @@ public class DataBytes {
                 return get10MBData();
             case HUGE:
                 return get100MBData();
+            default:
+                throw new IllegalArgumentException("Unrecognized size: " + size.toString());
         }
-
-        return null;
     }
 
     private static byte[] get1KBData() {
-        byte[] bytes = new byte[1024];
-        Random random = new Random();
+        final byte[] bytes = new byte[1024];
+        final Random random = new Random();
         random.nextBytes(bytes);
 
         return bytes;
@@ -48,25 +61,26 @@ public class DataBytes {
         return download("100MB.zip");
     }
 
-    private static byte[] download(String file) throws IOException {
+    private static byte[] download(final String file) throws IOException {
         final URL url = new URL("http", URL, "/" + file);
         final HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
         httpConn.addRequestProperty("User-Agent", USER_AGENT);
-        final InputStream in = httpConn.getInputStream();
+        final InputStream input = httpConn.getInputStream();
 
         final ByteArrayOutputStream output = new ByteArrayOutputStream();
         final byte[] buffer = new byte[4096];
-        int n = -1;
 
-        while ((n = in.read(buffer)) != -1) {
+        for (int n = -1; (n = input.read(buffer)) != -1;) {
             output.write(buffer, 0, n);
         }
-        in.close();
+
+        input.close();
         httpConn.disconnect();
 
         return output.toByteArray();
     }
 
+    /** Sizes of files. */
     public static enum Size {
         SMALL, MEDIUM, BIG, HUGE
     }

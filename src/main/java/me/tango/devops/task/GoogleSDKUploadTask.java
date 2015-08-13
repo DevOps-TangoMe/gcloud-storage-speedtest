@@ -8,24 +8,30 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.UUID;
 
-public class GoogleSDKUploadTask extends UploadTask {
+/** Upload and download data to test the speed. */
+public class GoogleSDKUploadTask extends AbstractUploadTask {
+    /** log. */
     private static final Logger LOGGER = LoggerFactory.getLogger(GoogleSDKUploadTask.class);
 
-    public GoogleSDKUploadTask(String region, String bucket, byte[] data) {
+    /** Constructor. */
+    public GoogleSDKUploadTask(final String region, final String bucket, final byte[] data) {
         super(region, bucket, data);
     }
 
+    /**
+     * Upload and download.
+     */
     @Override
     public void run() {
         final String key = UUID.randomUUID().toString();
 
         long start = System.currentTimeMillis();
 
-        boolean success = StorageManager.putBytes(bucket, key, data);
+        final boolean success = StorageManager.putBytes(bucket, key, data);
 
         long finish = System.currentTimeMillis();
 
-        long uploadTime = finish - start;
+        final long uploadTime = finish - start;
 
         if (!success) {
             result = new UploadTaskResult(success, uploadTime, 0);
@@ -34,11 +40,11 @@ public class GoogleSDKUploadTask extends UploadTask {
 
         start = System.currentTimeMillis();
 
-        byte[] returnData = StorageManager.getBytes(bucket, key);
+        final byte[] returnData = StorageManager.getBytes(bucket, key);
 
         finish = System.currentTimeMillis();
 
-        long downloadTime = finish - start;
+        final long downloadTime = finish - start;
 
         LOGGER.debug("Download task to {} finished in {} ms", bucket, downloadTime);
 
