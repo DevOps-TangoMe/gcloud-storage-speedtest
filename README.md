@@ -2,6 +2,11 @@
 
 A tool to test upload speeds to Google Cloud Storage regions.
 
+## Prerequisites
+
+JDK 8
+
+
 ## Compile
 
     mvn clean package
