@@ -20,8 +20,8 @@
         <maven.checkstyle.plugin.version>2.16</maven.checkstyle.plugin.version>
         <checkstyle.version>6.9</checkstyle.version>
         <maven.jxr.plugin.version>2.5</maven.jxr.plugin.version>
-        <maven.pmd.plugin.version>3.3</maven.pmd.plugin.version>
-        <maven.findbugs.plugin.version>3.0.0</maven.findbugs.plugin.version>
+        <maven.pmd.plugin.version>3.5</maven.pmd.plugin.version>
+        <maven.findbugs.plugin.version>3.0.1</maven.findbugs.plugin.version>
     </properties>
 
     <dependencies>
