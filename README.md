@@ -1,6 +1,6 @@
 # gcloud-storage-speedtest
 
-A tool to test upload speeds to Google Cloud Storage regions.
+A tool to test upload speeds to Google Cloud Storage regions.  This tool was written after reading: http://blog.takipi.com/amazon-ec2-2015-benchmark-testing-speeds-between-aws-ec2-and-s3-regions/ and inspired by https://github.com/takipi/aws-s3-speed
 
 ## Prerequisites
 
