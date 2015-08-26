@@ -20,7 +20,7 @@ import java.util.Map;
 
 /** Manage Google Cloud Storage client. */
 public final class StorageManager {
-    /** Available regions, US-WEST2 is not valid. */
+    /** Available regions, US-WEST2 and EUROPE-WEST1 are not available over API calls yet. */
     public static final String[] REGIONS =
         new String[] {"ASIA-EAST1", "US-CENTRAL1", "US-CENTRAL2", "US-EAST1", "US-EAST2",
             "US-EAST3", "US-WEST1"};
